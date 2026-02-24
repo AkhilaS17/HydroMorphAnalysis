@@ -1,0 +1,5 @@
+dataset_images_MP_2_masks/
+dataset_images_MP_2_*.zip
+temp_frames/
+__pycache__/
+*.pyc
