@@ -87,6 +87,10 @@ h1 {
     color:#00D4FF;
     font-weight:bold;
 }
+/* Change only border color of bordered containers */
+div[data-testid="stContainer"] {
+    border-color: rgba(0, 229, 255, 0.35) !important;
+}
 .shift-text {
     text-align:center;
     font-size:14px;
@@ -112,6 +116,55 @@ h1 {
 /* Reduce extra vertical spacing */
 .timelapse-container h3 {
     margin: 0;
+}
+/* ================= ABOUT PANEL ================= */
+
+.about-panel {
+    background-color: #1A2238;
+    padding: 22px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 25px;
+}
+
+.about-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.about-title {
+    font-size: 16px;
+    color: white;
+    font-weight: 600;
+}
+
+.info-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.08);
+    color: #9fb3c8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.about-text {
+    font-size: 14px;
+    color: #A8B2C3;
+    line-height: 1.7;
+}
+
+.about-text ul {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.about-text li {
+    margin-bottom: 6px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -141,14 +194,14 @@ def draw_compass(deg):
         line=dict(color="#00E5FF", width=4),
     )
 
-    # ---- Inner Fill ----
-    fig.add_shape(
-        type="circle",
-        x0=-0.95, y0=-0.95,
-        x1=0.95, y1=0.95,
-        line=dict(color="rgba(0,0,0,0)"),
-        fillcolor="#0E2233"
-    )
+    # # ---- Inner Fill ----
+    # fig.add_shape(
+    #     type="circle",
+    #     x0=-0.95, y0=-0.95,
+    #     x1=0.95, y1=0.95,
+    #     line=dict(color="rgba(0,0,0,0)"),
+    #     fillcolor="#0E2233"
+    # )
 
     # ---- Needle Tip ----
     tip_x = 0.8 * np.sin(angle)
@@ -221,11 +274,11 @@ def draw_compass(deg):
         width=350,
         height=350,
         margin=dict(l=0, r=0, t=0, b=0),
-        paper_bgcolor="#0E1624",
-        plot_bgcolor="#0E1624",
+        paper_bgcolor="rgba(0,0,0,0)",   # transparent
+        plot_bgcolor="rgba(0,0,0,0)",    # transparent
         xaxis=dict(visible=False, range=[-1, 1]),
         yaxis=dict(visible=False, range=[-1, 1], scaleanchor="x"),
-        showlegend=False   # 🔥 removes trace0, trace1, trace2
+        showlegend=False
     )
 
     return fig
@@ -301,7 +354,12 @@ with left:
 
             st.markdown("###  Change Type")
 
-            st.success(result["change_type"])
+            st.markdown(f"""
+            <div class="metric-box">
+                <div class="metric-title">Change Type</div>
+                <div class="metric-value">{result["change_type"]}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
             st.markdown("###  Area Difference")
             st.markdown(f"""
@@ -314,42 +372,65 @@ with left:
         # ================= RIGHT SIDE (Direction) =================
         with direction_col:
 
-            st.markdown("### 🧭 Direction")
+            st.markdown("###  Direction")
+            
+            with st.container(border=True):
 
-            direction_map = {
-                "North": 0,
-                "North-East": 45,
-                "East": 90,
-                "South-East": 135,
-                "South": 180,
-                "South-West": 225,
-                "West": 270,
-                "North-West": 315
-            }
+                direction_map = {
+                    "North": 0,
+                    "North-East": 45,
+                    "East": 90,
+                    "South-East": 135,
+                    "South": 180,
+                    "South-West": 225,
+                    "West": 270,
+                    "North-West": 315
+                }
 
-            degree = direction_map.get(result["direction"], 0)
+                degree = direction_map.get(result["direction"], 0)
 
-            st.plotly_chart(draw_compass(degree), use_container_width=True)
+                st.plotly_chart(draw_compass(degree), use_container_width=True)
 
-            st.markdown(
-                f"""
-                <div style='text-align:center; font-size:18px; color:#00D4FF; font-weight:600;'>
-                {result['direction']}
-                </div>
-                <div style='text-align:center; font-size:13px; color:#9fb3c8;'>
-                Shift: {result['shift_meters']:.2f} meters
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
+                st.markdown(
+                    f"""
+                    <div style='text-align:center; font-size:18px; font-weight:600;'>
+                        {result['direction']}
+                    </div>
+                    <div style='text-align:center; font-size:13px; opacity:0.7;'>
+                        Shift: {result['shift_meters']:.2f} meters
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 # ==========================================================
 # ================= RIGHT PANEL ============================
 # ==========================================================
 with right:
 
-    if "result" in st.session_state and st.session_state.result:
+    with st.container(border=True):
 
+        st.markdown("### About the Project")
+
+        st.markdown("""
+Water Body Change Detection using Remote Sensing is a geospatial dashboard 
+that analyzes how water bodies change over time using satellite water mask data.
+
+It compares the water spread between two selected dates and computes the 
+increase or decrease in surface area.
+
+The system also tracks the centroid shift to determine the direction and distance 
+of water movement.
+
+Results are presented through area metrics, directional analysis, timelapse 
+visualization, and a trend graph.
+
+### How to Use :
+
+- Select a location and choose the from and to dates, then click Run Analysis.
+- View the area change, direction shift, timelapse, and graph to understand water dynamics.
+""")
+    if "result" in st.session_state and st.session_state.result:
+        # ================= ABOUT PROJECT SECTION =================
         # ---------- TITLE ----------
         st.markdown("""
         <div class="timelapse-container">
