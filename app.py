@@ -497,49 +497,58 @@ visualization, and a trend graph.
             prev_mask = (src.read(1) > 0).astype(np.uint8)
 
         # ---------- TIMELAPSE LOOP ----------
-        for file_date, path in all_images[1:]:
+        # ---------- TIMELAPSE LOOP (Run 10 times) ----------
+        for _ in range(10):   # run timelapse 10 times
 
-            with rasterio.open(path) as src:
-                new_mask = (src.read(1) > 0).astype(np.uint8)
+            prev_mask = None
 
-            # --- Fix Shape Mismatch ---
-            if new_mask.shape != prev_mask.shape:
-                min_h = min(prev_mask.shape[0], new_mask.shape[0])
-                min_w = min(prev_mask.shape[1], new_mask.shape[1])
-                prev_mask = prev_mask[:min_h, :min_w]
-                new_mask = new_mask[:min_h, :min_w]
+            # reload first frame each cycle
+            with rasterio.open(all_images[0][1]) as src:
+                prev_mask = (src.read(1) > 0).astype(np.uint8)
 
-            h, w = prev_mask.shape
-            land_color = [186, 200, 140]
-            img = np.full((h, w, 3), land_color, dtype=np.uint8)
+            for file_date, path in all_images[1:]:
 
-            stable = (prev_mask == 1) & (new_mask == 1)
-            erosion = (prev_mask == 1) & (new_mask == 0)
-            dilation = (prev_mask == 0) & (new_mask == 1)
+                with rasterio.open(path) as src:
+                    new_mask = (src.read(1) > 0).astype(np.uint8)
 
-            img[stable] = [0, 170, 255]
-            img[erosion] = [255, 0, 0]
-            img[dilation] = [0, 0, 255]
+                # --- Fix Shape Mismatch ---
+                if new_mask.shape != prev_mask.shape:
+                    min_h = min(prev_mask.shape[0], new_mask.shape[0])
+                    min_w = min(prev_mask.shape[1], new_mask.shape[1])
+                    prev_mask = prev_mask[:min_h, :min_w]
+                    new_mask = new_mask[:min_h, :min_w]
 
-            fig, ax = plt.subplots(figsize=(8, 6))
+                h, w = prev_mask.shape
+                land_color = [186, 200, 140]
+                img = np.full((h, w, 3), land_color, dtype=np.uint8)
 
-            ax.imshow(img, interpolation="bilinear")
-            ax.set_aspect("equal")
-            ax.axis("off")
+                stable = (prev_mask == 1) & (new_mask == 1)
+                erosion = (prev_mask == 1) & (new_mask == 0)
+                dilation = (prev_mask == 0) & (new_mask == 1)
 
-            ax.set_title(
-                f"{location} - {file_date.strftime('%B %Y')}",
-                fontsize=13,
-                color="white",
-                pad=10
-            )
+                img[stable] = [0, 170, 255]
+                img[erosion] = [255, 0, 0]
+                img[dilation] = [0, 0, 255]
 
-            fig.patch.set_facecolor("#0E1117")
-            ax.set_facecolor("#0E1117")
+                fig, ax = plt.subplots(figsize=(8, 6))
 
-            frame_placeholder.pyplot(fig, clear_figure=True)
+                ax.imshow(img, interpolation="bilinear")
+                ax.set_aspect("equal")
+                ax.axis("off")
 
-            prev_mask = new_mask
-            time.sleep(0.6)
+                ax.set_title(
+                    f"{location} - {file_date.strftime('%B %Y')}",
+                    fontsize=13,
+                    color="white",
+                    pad=10
+                )
+
+                fig.patch.set_facecolor("#0E1117")
+                ax.set_facecolor("#0E1117")
+
+                frame_placeholder.pyplot(fig, clear_figure=True)
+
+                prev_mask = new_mask
+                time.sleep(0.4)
         
     
